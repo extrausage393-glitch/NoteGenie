@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#6366f1" />
+  <title>NoteGenie Pro</title>
+  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22NoteGenie%20Pro%22,%22short_name%22:%22NoteGenie%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22#f8fafc%22,%22theme_color%22:%22#6366f1%22,%22icons%22:[{%22src%22:%22https://files.catbox.moe/8z1c9s.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},{%22src%22:%22https://files.catbox.moe/8z1c9s.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22,%22purpose%22:%22maskable%22}]}">
+  <link rel="icon" href="https://files.catbox.moe/8z1c9s.png" />
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/babel-standalone@7/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide-react@0.263.0/dist/umd/lucide-react.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Indie+Flower&family=Patrick+Hand&family=Kalam:wght@300;400;700&family=Shadows+Into+Light&display=swap');
+    body{margin:0;font-family:-apple-system,system-ui,sans-serif;background:#f1f5f9;height:100vh;overflow:hidden}
+    /* Full app code will be inside the script below */
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+const { Pencil, Download, Wand2, Layout, Type, Palette, FileText, Settings2, Sparkles, Loader2 } = lucide;
+
+const FONTS=[{id:'caveat',name:'Caveat',family:'"Caveat",cursive',lineHeight:1.8},
+  {id:'indie',name:'Indie Flower',family:'"Indie Flower",cursive',lineHeight:1.9},
+  {id:'patrick',name:'Patrick Hand',family:'"Patrick Hand",cursive',lineHeight:1.7},
+  {id:'kalam',name:'Kalam',family:'"Kalam",cursive',lineHeight:1.7}];
+
+const PAPERS=[{id:'lined',type:'lined',bg:'#ffffff'},{id:'grid',type:'grid',bg:'#ffffff'},
+  {id:'dotted',type:'dotted',bg:'#ffffff'},{id:'vintage',type:'lined',bg:'#fdfbf7'}];
+
+const INKS=[{id:'blue',color:'#1e40af'},{id:'black',color:'#0f172a'},{id:'red',color:'#991b1b'}];
+
+function App() {
+  const [text,setText]=useState(`My Beautiful Handwritten Notes ✨\n\n*Key points look like this*\n\nShopping list:\n• Milk\n• Bread\n• Eggs\n\nDon't forget to smile today!`);
+  const [title,setTitle]=useState("My Notes");
+  const [font,setFont]=useState(FONTS[0]);
+  const [paper,setPaper]=useState(PAPERS[0]);
+  const [ink,setInk]=useState(INKS[0]);
+  const [showDoodles,setShowDoodles]=useState(true);
+  const previewRef=useRef();
+
+  const downloadPDF=async()=>{
+    const canvas=await html2canvas(previewRef.current,{scale:2});
+    const img=canvas.toDataURL('image/png');
+    const pdf=new jspdf.jsPDF('p','mm','a4');
+    pdf.addImage(img,'PNG',0,0,210,297);
+    pdf.save(`${title}.pdf`);
+  };
+
+  return (
+    <div style={{height:'100vh',display:'flex',flexDirection:'column',background:'#e2e8f0'}}>
+      <div style={{padding:'12px',background:'white',boxShadow:'0 4px 20px rgba(0,0,0,0.1)',display:'flex',gap:'10px',flexWrap:'wrap',zIndex:10}}>
+        <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Title" style={{padding:'8px 12px',borderRadius:'8px',border:'1px solid #ccc',flex:1,minWidth:'200px'}}/>
+        <select onChange={e=>setFont(FONTS.find(f=>f.id===e.target.value))} style={{padding:'8px',borderRadius:'8px'}}>
+          {FONTS.map(f=><option key={f.id} value={f.id}>{f.name}</option>)}
+        </select>
+        <select onChange={e=>setPaper(PAPERS.find(p=>p.id===e.target.value))} style={{padding:'8px',borderRadius:'8px'}}>
+          {PAPERS.map(p=><option key={p.id} value={p.id}>{p.id}</option>)}
+        </select>
+        <button onClick={()=>setInk(INKS[(INKS.indexOf(ink)+1)%INKS.length])} style={{width:'40px',height:'40px',borderRadius:'50%',background:ink.color}}/>
+        <button onClick={()=>setShowDoodles(!showDoodles)} style={{padding:'8px 12px',background:showDoodles?'#6366f1':'#94a3b8',color:'white',border:'none',borderRadius:'8px'}}>Doodles</button>
+        <button onClick={downloadPDF} style={{padding:'10px 20px',background:'#10b981',color:'white',border:'none',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
+          <Download size={20}/> PDF
+        </button>
+      </div>
+
+      <div style={{flex:1,display:'flex',gap:'20px',padding:'20px',overflow:'auto'}}>
+        <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Start typing..." style={{flex:1,minWidth:'300px',padding:'20px',fontSize:'18px',borderRadius:'12px',border:'1px solid #ccc',fontFamily:'inherit'}}/>
+
+        <div ref={previewRef} style={{width:'800px',minWidth:'300px',padding:'60px 80px',background:paper.bg,boxShadow:'0 20px 60px rgba(0,0,0,0.2)',borderRadius:'20px',position:'relative',fontFamily:font.family,fontSize:'32px',lineHeight:font.lineHeight,color:ink.color,
+          backgroundImage: paper.id==='lined' ? 'repeating-linear-gradient(transparent,transparent 46px,#94a3b8 47px)' :
+                           paper.id==='grid' ? 'linear-gradient(#e2e8f0 1px,transparent 1px),linear-gradient(90deg,#e2e8f0 1px,transparent 1px)' :
+                           paper.id==='dotted' ? 'radial-gradient(#94a3b8 2px,transparent 2px)' : 'none',
+          backgroundSize: paper.id==='grid'||paper.id==='dotted'?'30px 30px':'100%' }}>
+          <h1 style={{textAlign:'center',margin:'0 0 40px 0',fontSize:'48px'}}>{title}</h1>
+          {text.split('\n').map((line,i)=>(
+            <div key={i} style={{marginBottom:'16px',minHeight:'48px'}}>
+              {line.split(/(\*[^*]+\*)/g).map((part,j)=>
+                part.startsWith('*')&&part.endsWith('*') ?
+                <strong key={j} style={{background:'rgba(250,204,21,0.4)',padding:'0 8px',borderRadius:'8px'}}>{part.slice(1,-1)}</strong> :
+                <span key={j}>{part||'\u00A0'}</span>
+              )}
+            </div>
+          ))}
+          {showDoodles && <div style={{position:'absolute',bottom:'80px',right:'80px',opacity:0.3,fontSize:'80px'}}>✨</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
